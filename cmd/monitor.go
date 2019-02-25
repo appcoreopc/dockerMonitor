@@ -17,7 +17,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
+	"golang.org/x/net/context"
 )
 
 var instanceName string = ""
@@ -37,13 +40,27 @@ to quickly create a Cobra application.`,
 		fmt.Println("monitor called")
 		fmt.Println("instance name:", instanceName)
 
+		cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
+		if err != nil {
+			panic(err)
+		}
+
+		containers, err := cli.ImageList(context.Background(), types.ImageListOptions{})
+		if err != nil {
+			panic(err)
+		}
+
+		for _, container := range containers {
+			fmt.Println(container.ID)
+		}
+
 	},
 }
 
 func init() {
 
 	monitorCmd.Flags().StringVarP(&instanceName, "Instance", "i", "instance", "please specify container instance name.")
-	monitorCmd.MarkFlagRequired("instance")
+	monitorCmd.MarkFlagRequired("Instance")
 
 	rootCmd.AddCommand(monitorCmd)
 
