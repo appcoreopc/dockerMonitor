@@ -23,6 +23,7 @@ type DockerClient struct {
 	ContainerName string
 	targetClient  *client.Client
 	channel       chan ContainerStatus
+	containerId   string
 }
 
 func (dc *DockerClient) NewClient(c chan ContainerStatus) {
@@ -48,9 +49,7 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 
 		if strings.ToLower(container.Names[0]) == strings.ToLower("/"+containerName) {
 
-			fmt.Println("Found container")
-			fmt.Println(container.State)
-			//fmt.Println(container.Status)
+			dc.containerId = container.ID
 
 			dataUpdate := ContainerStatus{}
 			dataUpdate.Name = container.Names[0]
@@ -71,13 +70,18 @@ func (dc *DockerClient) GetContainerInfo() []types.Container {
 	return containers
 }
 
-func (dc *DockerClient) GetContainerStat(containerId string) types.ContainerStats {
+func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 
-	containerStats, err := dc.targetClient.ContainerStats(context.Background(), containerId, false)
+	containerStats, err := dc.targetClient.ContainerStats(context.Background(), dc.containerId, false)
 
 	if err != nil {
 		panic("Unable to get container stat.")
 	}
+
+	dataUpdate := ContainerStatus{}
+	dataUpdate.Name = "test"
+	dataUpdate.Status = "Extended"
+	dc.channel <- dataUpdate
 
 	return containerStats
 
