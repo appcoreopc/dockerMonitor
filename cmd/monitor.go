@@ -17,10 +17,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/client"
+	"github.com/appcoreopc/dockerMonitor/appclient"
 	"github.com/spf13/cobra"
-	"golang.org/x/net/context"
 )
 
 var instanceName string = ""
@@ -37,21 +35,18 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		fmt.Println("monitor called")
-		fmt.Println("instance name:", instanceName)
+		statusChannel := make(chan appclient.ContainerStatus, 5)
+		docker := new(appclient.DockerClient)
+		docker.NewClient(statusChannel)
 
-		cli, err := client.NewClientWithOpts(client.WithVersion("1.37"))
-		if err != nil {
-			panic(err)
-		}
+		fmt.Println("running monitor")
+		docker.GetContainerByName(instanceName)
 
-		containers, err := cli.ImageList(context.Background(), types.ImageListOptions{})
-		if err != nil {
-			panic(err)
-		}
+		fmt.Println("done!!!")
 
-		for _, container := range containers {
-			fmt.Println(container.ID)
+		for cs := range statusChannel {
+			fmt.Println("Giving the proper state")
+			fmt.Println(cs.Status)
 		}
 
 	},
