@@ -10,6 +10,7 @@ package appclient
 // keep on updating the ui
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -73,6 +74,12 @@ func (dc *DockerClient) GetContainerInfo() []types.Container {
 func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 
 	containerStats, err := dc.targetClient.ContainerStats(context.Background(), dc.containerId, false)
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(containerStats.Body)
+	fmt.Println(buf.String())
+
+	fmt.Println(containerStats.OSType)
 
 	if err != nil {
 		panic("Unable to get container stat.")

@@ -38,8 +38,6 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	docker := new(appclient.DockerClient)
 	docker.NewClient(statusChannel)
 
-	//docker.GetContainerStat()
-
 	// for cs := range statusChannel {
 	// 	fmt.Println("Giving the proper state")
 	// 	fmt.Println(cs.Status)
@@ -55,6 +53,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 			case <-ticker.C:
 				fmt.Println("Timer elapsed! ")
 				docker.GetContainerByName(instanceName)
+				docker.GetContainerStat()
 			case <-quit:
 				ticker.Stop()
 				return
@@ -62,10 +61,11 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 		}
 	}()
 
+	// block forever //
+
 	for cs := range statusChannel {
 		fmt.Println("Giving the proper state")
 		fmt.Println(cs.Status)
 	}
 
-	time.Sleep(25 * time.Second)
 }
