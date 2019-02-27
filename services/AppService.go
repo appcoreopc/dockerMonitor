@@ -2,6 +2,7 @@ package services
 
 import (
 	"log"
+	"runtime/debug"
 	"time"
 
 	"github.com/appcoreopc/dockerMonitor/appclient"
@@ -12,7 +13,7 @@ type AppService struct {
 
 func (ap *AppService) Start(instanceName string) {
 
-	log.Println("start my services")
+	log.Println("Start monitoring docker container instance.")
 
 	defer ap.AppServiceRecovery()
 
@@ -21,8 +22,9 @@ func (ap *AppService) Start(instanceName string) {
 
 func (ap *AppService) AppServiceRecovery() {
 
-	if r := recover(); r != nil {
-		log.Println("recover")
+	if err := recover(); err != nil {
+		log.Println(err)
+		debug.PrintStack()
 	}
 }
 
@@ -31,8 +33,6 @@ func (ap *AppService) Execute() {
 }
 
 func (ap *AppService) KickOffTimer(instanceName string) {
-
-	log.Println("kicking off my timer")
 
 	statusChannel := make(chan appclient.ContainerStatus, 5)
 	docker := new(appclient.DockerClient)
@@ -59,6 +59,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	// block forever //
 
 	for cs := range statusChannel {
+
 		log.Println(cs.Name)
 		log.Println(cs.Status)
 		if cs.Stats != nil {
@@ -68,5 +69,4 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 		}
 
 	}
-
 }
