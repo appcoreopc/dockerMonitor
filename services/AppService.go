@@ -38,11 +38,6 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	docker := new(appclient.DockerClient)
 	docker.NewClient(statusChannel)
 
-	// for cs := range statusChannel {
-	// 	fmt.Println("Giving the proper state")
-	// 	fmt.Println(cs.Status)
-	// }
-
 	ticker := time.NewTicker(5 * time.Second)
 
 	quit := make(chan struct{})
