@@ -1,7 +1,7 @@
 package services
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"github.com/appcoreopc/dockerMonitor/appclient"
@@ -12,7 +12,7 @@ type AppService struct {
 
 func (ap *AppService) Start(instanceName string) {
 
-	fmt.Println("start my services")
+	log.Println("start my services")
 
 	defer ap.AppServiceRecovery()
 
@@ -22,7 +22,7 @@ func (ap *AppService) Start(instanceName string) {
 func (ap *AppService) AppServiceRecovery() {
 
 	if r := recover(); r != nil {
-		fmt.Println("recover")
+		log.Println("recover")
 	}
 }
 
@@ -32,7 +32,7 @@ func (ap *AppService) Execute() {
 
 func (ap *AppService) KickOffTimer(instanceName string) {
 
-	fmt.Println("kicking off my timer")
+	log.Println("kicking off my timer")
 
 	statusChannel := make(chan appclient.ContainerStatus, 5)
 	docker := new(appclient.DockerClient)
@@ -44,6 +44,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	// }
 
 	ticker := time.NewTicker(5 * time.Second)
+
 	quit := make(chan struct{})
 
 	go func() {
@@ -51,7 +52,6 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 		for {
 			select {
 			case <-ticker.C:
-				fmt.Println("Timer elapsed! ")
 				docker.GetContainerByName(instanceName)
 				docker.GetContainerStat()
 			case <-quit:
@@ -64,8 +64,14 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	// block forever //
 
 	for cs := range statusChannel {
-		fmt.Println("Giving the proper state")
-		fmt.Println(cs.Status)
+		log.Println(cs.Name)
+		log.Println(cs.Status)
+		if cs.Stats != nil {
+			log.Println("Memory")
+			log.Println("Limit", cs.Stats.Memory_stats.Limit)
+			log.Println("Usage", cs.Stats.Memory_stats.Usage)
+		}
+
 	}
 
 }

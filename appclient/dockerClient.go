@@ -12,7 +12,8 @@ package appclient
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"encoding/json"
+	"log"
 	"strings"
 
 	"github.com/docker/docker/api/types"
@@ -46,7 +47,7 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 
 	for _, container := range containers {
 
-		fmt.Println(container.Names[0])
+		log.Println(container.Names[0])
 
 		if strings.ToLower(container.Names[0]) == strings.ToLower("/"+containerName) {
 
@@ -77,17 +78,20 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(containerStats.Body)
-	fmt.Println(buf.String())
 
-	fmt.Println(containerStats.OSType)
+	dockerStat := new(ContainerStat)
+	json.Unmarshal(buf.Bytes(), dockerStat)
+
+	//log.Println(buf.String())
+	log.Println(containerStats.OSType)
 
 	if err != nil {
-		panic("Unable to get container stat.")
+		log.Println("Unable to get container stat.")
 	}
 
 	dataUpdate := ContainerStatus{}
-	dataUpdate.Name = "test"
-	dataUpdate.Status = "Extended"
+	dataUpdate.Name = dockerStat.Name
+	dataUpdate.Stats = dockerStat
 	dc.channel <- dataUpdate
 
 	return containerStats
