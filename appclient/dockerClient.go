@@ -95,6 +95,7 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 	return containerStats
 }
 
+/// Inspect swarm and its nodes //
 func (dc *DockerClient) GetSwarmService() {
 
 	serviceList, _ := dc.targetClient.ServiceList(context.Background(), types.ServiceListOptions{})
@@ -112,7 +113,6 @@ func (dc *DockerClient) GetSwarmService() {
 		log.Println("Task List serviceid", n.ServiceID)
 		log.Println("Task List status", n.Status)
 		//	log.Println("Task List nodes", n.NetworksAttachments[0].Addresses)
-
 		log.Println("--------------------------------")
 	}
 
