@@ -4,6 +4,7 @@ type ContainerStatus struct {
 	Name   string
 	Status string
 	Stats  *ContainerStat
+	Disk   *TotalDiskUsage
 }
 
 type ContainerStat struct {
@@ -61,4 +62,10 @@ type Stats struct {
 type CpuStats struct {
 	system_cpu_usage float32
 	online_cpus      int
+}
+
+type TotalDiskUsage struct {
+	Volumes    int64
+	Images     int64
+	Containers int64
 }

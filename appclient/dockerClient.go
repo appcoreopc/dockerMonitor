@@ -1,7 +1,7 @@
 package appclient
 
 /// strategy //
-// get container name //
+//  get container name //
 //
 // pool interval
 // get stats memory
@@ -26,19 +26,19 @@ type DockerClient struct {
 	targetClient  *client.Client
 	channel       chan ContainerStatus
 	containerId   string
+	StatusInfo    ContainerStatus
 }
 
 func (dc *DockerClient) NewClient(c chan ContainerStatus) {
 
 	dc.channel = c
+	dc.StatusInfo = ContainerStatus{}
 
 	client, err := client.NewClientWithOpts(client.WithVersion("1.37"))
 	if err != nil {
 		panic(err)
 	}
-
 	dc.targetClient = client
-
 }
 
 func (dc *DockerClient) GetContainerByName(containerName string) {
@@ -53,10 +53,9 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 
 			dc.containerId = container.ID
 
-			dataUpdate := ContainerStatus{}
-			dataUpdate.Name = container.Names[0]
-			dataUpdate.Status = container.State
-			dc.channel <- dataUpdate
+			dc.StatusInfo.Name = container.Names[0]
+			dc.StatusInfo.Status = container.State
+			dc.channel <- dc.StatusInfo
 		}
 	}
 }
@@ -89,11 +88,47 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 		log.Println("Unable to get container stat.")
 	}
 
-	dataUpdate := ContainerStatus{}
-	dataUpdate.Name = dockerStat.Name
-	dataUpdate.Stats = dockerStat
-	dc.channel <- dataUpdate
+	dc.StatusInfo.Stats = dockerStat
+	dc.channel <- dc.StatusInfo
 
 	return containerStats
+}
 
+func (dc *DockerClient) GetDiskUsage() {
+
+	log.Println("getting disk usage data")
+
+	dusage, _ := dc.targetClient.DiskUsage(context.Background())
+
+	var totalVolSize int64
+	var totalContainerSize int64
+	var totalImageSize int64
+
+	for _, v := range dusage.Volumes {
+
+		totalVolSize += v.UsageData.Size
+	}
+
+	for _, c := range dusage.Containers {
+
+		totalContainerSize += c.SizeRw
+	}
+
+	for _, i := range dusage.Images {
+
+		totalImageSize += i.Size
+	}
+
+	log.Println("printing volume info")
+
+	log.Println(totalVolSize)
+	log.Println(totalContainerSize)
+	log.Println(totalImageSize)
+
+	dc.StatusInfo.Disk = &TotalDiskUsage{}
+	dc.StatusInfo.Disk.Volumes = totalVolSize
+	dc.StatusInfo.Disk.Containers = totalContainerSize
+	dc.StatusInfo.Disk.Images = totalImageSize
+
+	dc.channel <- dc.StatusInfo
 }

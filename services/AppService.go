@@ -49,6 +49,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 			case <-ticker.C:
 				docker.GetContainerByName(instanceName)
 				docker.GetContainerStat()
+				docker.GetDiskUsage()
 			case <-quit:
 				ticker.Stop()
 				return
@@ -66,6 +67,14 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 			log.Println("Memory")
 			log.Println("Limit", cs.Stats.Memory_stats.Limit)
 			log.Println("Usage", cs.Stats.Memory_stats.Usage)
+		}
+
+		if cs.Disk != nil {
+
+			log.Println("Total data volumne used", cs.Disk.Volumes)
+			log.Println("Total container size", cs.Disk.Containers)
+			log.Println("Total image size", cs.Disk.Images)
+
 		}
 
 	}
