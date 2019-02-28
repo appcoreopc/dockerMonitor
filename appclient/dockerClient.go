@@ -47,13 +47,14 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 
 	for _, container := range containers {
 
-		log.Println(container.Names[0])
+		log.Println("getting out the names", container.Names[0])
 
 		if strings.ToLower(container.Names[0]) == strings.ToLower("/"+containerName) {
 
 			dc.containerId = container.ID
 
 			dc.StatusInfo.Name = container.Names[0]
+			dc.StatusInfo.Image = container.Image
 			dc.StatusInfo.Status = container.State
 			dc.channel <- dc.StatusInfo
 		}
@@ -92,6 +93,29 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 	dc.channel <- dc.StatusInfo
 
 	return containerStats
+}
+
+func (dc *DockerClient) GetSwarmService() {
+
+	serviceList, _ := dc.targetClient.ServiceList(context.Background(), types.ServiceListOptions{})
+
+	for _, n := range serviceList {
+		log.Println("Service List nodes", n.ID)
+	}
+
+	taskList, _ := dc.targetClient.TaskList(context.Background(), types.TaskListOptions{})
+
+	for _, n := range taskList {
+		log.Println("--------------------------------")
+		log.Println("Task List name", n.Name)
+		log.Println("Task List id", n.ID)
+		log.Println("Task List serviceid", n.ServiceID)
+		log.Println("Task List status", n.Status)
+		//	log.Println("Task List nodes", n.NetworksAttachments[0].Addresses)
+
+		log.Println("--------------------------------")
+	}
+
 }
 
 func (dc *DockerClient) GetDiskUsage() {

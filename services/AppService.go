@@ -50,6 +50,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 				docker.GetContainerByName(instanceName)
 				docker.GetContainerStat()
 				docker.GetDiskUsage()
+				docker.GetSwarmService()
 			case <-quit:
 				ticker.Stop()
 				return
@@ -63,6 +64,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 
 		log.Println(cs.Name)
 		log.Println(cs.Status)
+		log.Println(cs.Image)
 		if cs.Stats != nil {
 			log.Println("Memory")
 			log.Println("Limit", cs.Stats.Memory_stats.Limit)

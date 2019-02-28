@@ -3,6 +3,7 @@ package appclient
 type ContainerStatus struct {
 	Name   string
 	Status string
+	Image  string
 	Stats  *ContainerStat
 	Disk   *TotalDiskUsage
 }
