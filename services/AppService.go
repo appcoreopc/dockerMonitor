@@ -6,12 +6,15 @@ import (
 	"time"
 
 	"github.com/appcoreopc/dockerMonitor/appclient"
+	"github.com/fatih/color"
 )
 
 type AppService struct {
 }
 
 func (ap *AppService) Start(instanceName string) {
+
+	color.Set(color.FgHiYellow)
 
 	log.Println("Start monitoring docker container instance.")
 
@@ -28,19 +31,15 @@ func (ap *AppService) AppServiceRecovery() {
 	}
 }
 
-func (ap *AppService) Execute() {
-
-}
-
 func (ap *AppService) KickOffTimer(instanceName string) {
 
 	statusChannel := make(chan appclient.ContainerStatus, 5)
+	quit := make(chan struct{})
+
 	docker := new(appclient.DockerClient)
 	docker.NewClient(statusChannel)
 
 	ticker := time.NewTicker(5 * time.Second)
-
-	quit := make(chan struct{})
 
 	go func() {
 
@@ -59,25 +58,27 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	}()
 
 	// block forever //
+	log.Println("Displaying results ")
 
 	for cs := range statusChannel {
 
-		log.Println(cs.Name)
-		log.Println(cs.Status)
-		log.Println(cs.Image)
-		if cs.Stats != nil {
-			log.Println("Memory")
-			log.Println("Limit", cs.Stats.Memory_stats.Limit)
-			log.Println("Usage", cs.Stats.Memory_stats.Usage)
+		if len(cs.Name) > 0 {
+			log.Println(cs.Name)
+			log.Println(cs.Status)
+			log.Println(cs.Image)
+
+			if cs.Stats != nil {
+				log.Println("Memory")
+				log.Println("Limit", cs.Stats.Memory_stats.Limit)
+				log.Println("Usage", cs.Stats.Memory_stats.Usage)
+			}
+
+			if cs.Disk != nil {
+
+				log.Println("Total data volumne used", cs.Disk.Volumes)
+				log.Println("Total container size", cs.Disk.Containers)
+				log.Println("Total image size", cs.Disk.Images)
+			}
 		}
-
-		if cs.Disk != nil {
-
-			log.Println("Total data volumne used", cs.Disk.Volumes)
-			log.Println("Total container size", cs.Disk.Containers)
-			log.Println("Total image size", cs.Disk.Images)
-
-		}
-
 	}
 }

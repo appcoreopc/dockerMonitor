@@ -44,20 +44,24 @@ func (dc *DockerClient) NewClient(c chan ContainerStatus) {
 func (dc *DockerClient) GetContainerByName(containerName string) {
 
 	containers := dc.GetContainerInfo()
+	foundContainer := false
 
 	for _, container := range containers {
 
-		log.Println("getting out the names", container.Names[0])
-
 		if strings.ToLower(container.Names[0]) == strings.ToLower("/"+containerName) {
 
+			foundContainer = true
 			dc.containerId = container.ID
-
 			dc.StatusInfo.Name = container.Names[0]
 			dc.StatusInfo.Image = container.Image
 			dc.StatusInfo.Status = container.State
 			dc.channel <- dc.StatusInfo
 		}
+	}
+
+	if !foundContainer {
+		log.Println("Unable find docker container:" + containerName)
+		close(dc.channel)
 	}
 }
 
@@ -76,21 +80,23 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 
 	containerStats, err := dc.targetClient.ContainerStats(context.Background(), dc.containerId, false)
 
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(containerStats.Body)
+	if containerStats.Body != nil {
+		buf := new(bytes.Buffer)
+		buf.ReadFrom(containerStats.Body)
 
-	dockerStat := new(ContainerStat)
-	json.Unmarshal(buf.Bytes(), dockerStat)
+		dockerStat := new(ContainerStat)
+		json.Unmarshal(buf.Bytes(), dockerStat)
 
-	//log.Println(buf.String())
-	log.Println(containerStats.OSType)
+		//log.Println(buf.String())
+		log.Println(containerStats.OSType)
 
-	if err != nil {
-		log.Println("Unable to get container stat.")
+		if err != nil {
+			log.Println("Unable to get container stat.")
+		}
+
+		dc.StatusInfo.Stats = dockerStat
+		dc.channel <- dc.StatusInfo
 	}
-
-	dc.StatusInfo.Stats = dockerStat
-	dc.channel <- dc.StatusInfo
 
 	return containerStats
 }
@@ -111,6 +117,7 @@ func (dc *DockerClient) GetSwarmService() {
 		log.Println("Task List name", n.Name)
 		log.Println("Task List id", n.ID)
 		log.Println("Task List serviceid", n.ServiceID)
+		log.Println("Task List nodeid ", n.NodeID)
 		log.Println("Task List status", n.Status)
 		//	log.Println("Task List nodes", n.NetworksAttachments[0].Addresses)
 		log.Println("--------------------------------")
