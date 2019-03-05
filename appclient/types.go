@@ -1,11 +1,12 @@
 package appclient
 
 type ContainerStatus struct {
-	Name   string
-	Status string
-	Image  string
-	Stats  *ContainerStat
-	Disk   *TotalDiskUsage
+	Name      string
+	Status    string
+	Image     string
+	Stats     *ContainerStat
+	Disk      *TotalDiskUsage
+	Timestamp string
 }
 
 type ContainerStat struct {

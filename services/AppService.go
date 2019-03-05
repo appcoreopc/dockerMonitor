@@ -63,11 +63,17 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	for cs := range statusChannel {
 
 		if len(cs.Name) > 0 {
+			color.Set(color.FgYellow)
+
+			log.Println(cs.Timestamp)
 			log.Println(cs.Name)
 			log.Println(cs.Status)
 			log.Println(cs.Image)
 
 			if cs.Stats != nil {
+
+				color.Set(color.FgCyan)
+
 				log.Println("Memory")
 				log.Println("Limit", cs.Stats.Memory_stats.Limit)
 				log.Println("Usage", cs.Stats.Memory_stats.Usage)
@@ -75,6 +81,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 
 			if cs.Disk != nil {
 
+				color.Set(color.FgGreen)
 				log.Println("Total data volumne used", cs.Disk.Volumes)
 				log.Println("Total container size", cs.Disk.Containers)
 				log.Println("Total image size", cs.Disk.Images)

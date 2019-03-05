@@ -15,6 +15,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
@@ -52,6 +53,7 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 
 			foundContainer = true
 			dc.containerId = container.ID
+			dc.StatusInfo.Timestamp = time.Now().String()
 			dc.StatusInfo.Name = container.Names[0]
 			dc.StatusInfo.Image = container.Image
 			dc.StatusInfo.Status = container.State
@@ -81,6 +83,7 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 	containerStats, err := dc.targetClient.ContainerStats(context.Background(), dc.containerId, false)
 
 	if containerStats.Body != nil {
+
 		buf := new(bytes.Buffer)
 		buf.ReadFrom(containerStats.Body)
 
