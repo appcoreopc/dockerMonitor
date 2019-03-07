@@ -15,6 +15,7 @@
 package cmd
 
 import (
+	"github.com/appcoreopc/dockerMonitor/appclient"
 	"github.com/appcoreopc/dockerMonitor/services"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +34,16 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		as := new(services.AppService)
+		statusChannel := make(chan appclient.ContainerStatus, 5)
+		quit := make(chan struct{})
+
+		dockerClient := appclient.DockerClient{Channel: statusChannel}
+
+		as := services.AppService{
+			RestClient:    &dockerClient, // & to pass object to a interface type
+			StatusChannel: statusChannel,
+			Quit:          quit}
+
 		as.Start(instanceName)
 	},
 }

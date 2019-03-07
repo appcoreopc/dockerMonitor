@@ -10,17 +10,18 @@ import (
 )
 
 type AppService struct {
+	RestClient    appclient.ContainerClient
+	StatusChannel chan appclient.ContainerStatus
+	Quit          chan struct{}
 }
 
 func (ap *AppService) Start(instanceName string) {
 
 	color.Set(color.FgHiYellow)
 
-	log.Println("Start monitoring docker container instance.")
-
 	defer ap.AppServiceRecovery()
 
-	ap.KickOffTimer(instanceName)
+	ap.StartTimer(instanceName)
 }
 
 func (ap *AppService) AppServiceRecovery() {
@@ -31,13 +32,11 @@ func (ap *AppService) AppServiceRecovery() {
 	}
 }
 
-func (ap *AppService) KickOffTimer(instanceName string) {
+func (ap *AppService) StartTimer(instanceName string) {
 
-	statusChannel := make(chan appclient.ContainerStatus, 5)
-	quit := make(chan struct{})
+	ap.RestClient.NewClient()
 
-	docker := new(appclient.DockerClient)
-	docker.NewClient(statusChannel)
+	log.Println("docker object", ap.RestClient)
 
 	ticker := time.NewTicker(5 * time.Second)
 
@@ -46,11 +45,11 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 		for {
 			select {
 			case <-ticker.C:
-				docker.GetContainerByName(instanceName)
-				docker.GetContainerStat()
-				docker.GetDiskUsage()
-				docker.GetSwarmService()
-			case <-quit:
+				ap.RestClient.GetContainerByName(instanceName)
+				ap.RestClient.GetContainerStat()
+				ap.RestClient.GetDiskUsage()
+				ap.RestClient.GetSwarmService()
+			case <-ap.Quit:
 				ticker.Stop()
 				return
 			}
@@ -60,7 +59,7 @@ func (ap *AppService) KickOffTimer(instanceName string) {
 	// block forever //
 	log.Println("Displaying results ")
 
-	for cs := range statusChannel {
+	for cs := range ap.StatusChannel {
 
 		if len(cs.Name) > 0 {
 			color.Set(color.FgYellow)

@@ -25,15 +25,15 @@ type DockerClient struct {
 	Hostname      string
 	ContainerName string
 	targetClient  *client.Client
-	channel       chan ContainerStatus
+	Channel       chan ContainerStatus
 	containerId   string
 	StatusInfo    ContainerStatus
 }
 
-func (dc *DockerClient) NewClient(c chan ContainerStatus) {
+func (dc *DockerClient) NewClient() {
 
-	dc.channel = c
-	dc.StatusInfo = ContainerStatus{}
+	//dc.channel = c
+	//dc.StatusInfo = ContainerStatus{}
 
 	client, err := client.NewClientWithOpts(client.WithVersion("1.37"))
 	if err != nil {
@@ -57,13 +57,13 @@ func (dc *DockerClient) GetContainerByName(containerName string) {
 			dc.StatusInfo.Name = container.Names[0]
 			dc.StatusInfo.Image = container.Image
 			dc.StatusInfo.Status = container.State
-			dc.channel <- dc.StatusInfo
+			dc.Channel <- dc.StatusInfo
 		}
 	}
 
 	if !foundContainer {
 		log.Println("Unable find docker container:" + containerName)
-		close(dc.channel)
+		close(dc.Channel)
 	}
 }
 
@@ -98,7 +98,7 @@ func (dc *DockerClient) GetContainerStat() types.ContainerStats {
 		}
 
 		dc.StatusInfo.Stats = dockerStat
-		dc.channel <- dc.StatusInfo
+		dc.Channel <- dc.StatusInfo
 	}
 
 	return containerStats
@@ -164,5 +164,5 @@ func (dc *DockerClient) GetDiskUsage() {
 	dc.StatusInfo.Disk.Containers = totalContainerSize
 	dc.StatusInfo.Disk.Images = totalImageSize
 
-	dc.channel <- dc.StatusInfo
+	dc.Channel <- dc.StatusInfo
 }
